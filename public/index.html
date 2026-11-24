@@ -453,6 +453,7 @@ html{-webkit-text-size-adjust:100%}
               <select id="university" name="university"><option>University of Mpumalanga (UMP)</option><option>Other University</option></select></div>
             <div class="fg"><label for="phone">Phone Number</label><input type="tel" id="phone" name="phone" required placeholder="e.g. 063 123 4567"></div>
           </div>
+          <div class="fg"><label for="email">Email Address</label><input type="email" id="email" name="email" required placeholder="you@example.com" autocomplete="email" inputmode="email"></div>
           <div class="fg"><label for="room">Room Type</label>
             <select id="room" name="room"><option>Bachelor Room</option><option selected>Single Room</option><option>Sharing Room</option></select></div>
           <div class="fg"><label>Upload ID Picture</label>
@@ -564,6 +565,7 @@ form.addEventListener('submit',async function(e){
     const r=await fetch('/api/apply',{method:'POST',body:fd});
     const j=await r.json().catch(()=>({}));
     if(!r.ok||!j.ok)throw new Error(j.error||'Something went wrong. Please try again.');
+    if(j.emailed)document.querySelector('#success p').textContent='We will review your details and contact you within 24 hours. We are also sending a confirmation to your email, so check your inbox (and your spam folder).';
     document.getElementById('formWrap').style.display='none';
     document.getElementById('success').style.display='block';
     document.getElementById('success').scrollIntoView({behavior:'smooth',block:'center'});

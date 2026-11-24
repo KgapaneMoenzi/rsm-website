@@ -6,6 +6,7 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const multer = require('multer');
 const store = require('./lib/store').create();
+const mailer = require('./lib/mailer');
 
 const PROD = process.env.NODE_ENV === 'production';
 const PORT = process.env.PORT || 3000;
@@ -180,12 +181,15 @@ app.post('/api/apply', applyFloodLimiter, applyLimiter, receiveId, async (req, r
     const university = clean(b.university);
     const room = clean(b.room);
     const phone = normalisePhone(b.phone);
+    const email = clean(b.email).toLowerCase();
 
     if (name.length < 2 || name.length > 100) return fail(res, 'Please enter your full name.');
     if (!/^[A-Za-z0-9\- ]{3,30}$/.test(studentNumber))
       return fail(res, 'Please enter a valid student number (letters and numbers only).');
     if (!UNIVERSITIES.includes(university)) return fail(res, 'Please choose a university from the list.');
     if (!phone) return fail(res, 'Please enter a valid South African phone number, e.g. 063 123 4567.');
+    if (email.length > 120 || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email))
+      return fail(res, 'Please enter a valid email address so we can confirm your application.');
     if (!ROOMS.includes(room)) return fail(res, 'Please choose a room type.');
     if (!['on', 'true', '1', 'yes'].includes(clean(b.consent).toLowerCase()))
       return fail(res, 'Please tick the box to agree that we may use your details and ID.');
@@ -194,11 +198,15 @@ app.post('/api/apply', applyFloodLimiter, applyLimiter, receiveId, async (req, r
     const img = sniffImage(req.file.buffer); // trust the file's real bytes, not the label the browser sent
     if (!img) return fail(res, 'That file is not a valid JPG or PNG photo.');
 
-    await store.save(
-      { name, studentNumber, university, phone, room },
+    const saved = await store.save(
+      { name, studentNumber, university, phone, email, room },
       { buffer: req.file.buffer, type: img.type, ext: img.ext }
     );
-    res.json({ ok: true });
+    // Reply to the student first; emails go out in the background and can never lose the application
+    res.json({ ok: true, emailed: mailer.enabled });
+    mailer
+      .notifyNewApplication({ name, studentNumber, university, phone, email, room, createdAt: saved.createdAt })
+      .catch((e) => console.error('email error:', e.message));
   } catch (e) {
     console.error('apply failed:', e.message);
     res.status(500).json({ error: 'Something went wrong on our side. Please try again in a moment.' });
@@ -305,6 +313,8 @@ app.use((err, req, res, next) => {
 store
   .init()
   .then(() => {
-    app.listen(PORT, () => console.log(`RSM site running on port ${PORT} (storage: ${store.kind})`));
+    app.listen(PORT, () =>
+      console.log(`RSM site running on port ${PORT} (storage: ${store.kind}, email alerts: ${mailer.enabled ? 'on' : 'off'})`)
+    );
   })
   .catch((e) => die('Could not start the database: ' + e.message));
