@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>RSM Admin | Applications</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#0b1220;--navy3:#1a2744;--gold:#f5a623;--gold-dark:#b97200;--bg:#f3f5fa;--card:#fff;--text:#2b3750;--muted:#6b7a94;--line:#e3e8f2;--ok:#117a4d;--info:#1f5fbf;--bad:#b42318}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;min-height:100vh}
+h1,h2,h3{font-family:'Outfit',sans-serif;color:var(--navy)}
+button,input,select{font:inherit}
+[hidden]{display:none!important}
+
+/* login */
+.login-wrap{min-height:100vh;display:grid;place-items:center;padding:20px;background:linear-gradient(135deg,var(--navy),var(--navy3))}
+.login{background:#fff;border-radius:22px;padding:34px 28px;width:100%;max-width:380px;box-shadow:0 30px 70px rgba(0,0,0,.35)}
+.login .mark{width:46px;height:46px;border-radius:12px;background:linear-gradient(135deg,var(--gold),#d98a0b);display:grid;place-items:center;font:800 1.2rem 'Outfit';color:var(--navy);margin-bottom:16px}
+.login h1{font-size:1.5rem;margin-bottom:4px}
+.login p{color:var(--muted);font-size:.92rem;margin-bottom:22px}
+label{display:block;font-weight:600;font-size:.86rem;margin-bottom:6px}
+input[type=password],input[type=search],select{width:100%;padding:13px 14px;border:1.5px solid var(--line);border-radius:12px;background:#fff;color:var(--navy)}
+input:focus,select:focus,button:focus-visible{outline:3px solid rgba(245,166,35,.45);outline-offset:1px;border-color:var(--gold)}
+.btn{border:0;border-radius:12px;padding:13px 18px;font-weight:600;cursor:pointer;background:var(--navy);color:#fff;min-height:46px;transition:.2s}
+.btn:hover{background:var(--gold);color:var(--navy)}
+.btn.gold{background:var(--gold);color:var(--navy)}
+.btn.gold:hover{background:#ffc15c}
+.btn.ghost{background:#fff;color:var(--navy);border:1.5px solid var(--line)}
+.btn.ghost:hover{border-color:var(--gold);background:#fff}
+.btn.danger{background:#fff;color:var(--bad);border:1.5px solid #f2c9c5}
+.btn.danger:hover{background:var(--bad);color:#fff;border-color:var(--bad)}
+.btn.danger.armed{background:var(--bad);color:#fff;border-color:var(--bad)}
+.btn.sm{min-height:40px;padding:9px 14px;font-size:.9rem}
+.login .btn{width:100%;margin-top:16px}
+.err{color:var(--bad);font-size:.9rem;margin-top:12px;min-height:1.3em}
+
+/* app */
+header.top{background:var(--navy);color:#fff;position:sticky;top:0;z-index:20}
+.top-in{max-width:1000px;margin:0 auto;padding:14px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;font:700 1.05rem 'Outfit';flex:1;min-width:0}
+.brand .mark{width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,var(--gold),#d98a0b);display:grid;place-items:center;color:var(--navy);font-weight:800;flex:none}
+.brand small{display:block;color:#9fb0cc;font:400 .72rem 'Inter'}
+main{max-width:1000px;margin:0 auto;padding:20px 16px 60px}
+.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}
+.sum{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 12px;text-align:center}
+.sum b{display:block;font:800 1.6rem 'Outfit';color:var(--navy)}
+.sum span{font-size:.72rem;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-weight:600}
+.sum.new b{color:var(--gold-dark)}
+.tools{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.tools input{flex:2 1 220px}
+.tools select{flex:1 1 150px}
+.list{display:grid;gap:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:0 6px 20px rgba(11,18,32,.04)}
+.card.is-new{border-left:5px solid var(--gold)}
+.row1{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}
+.card h3{font-size:1.15rem;overflow-wrap:anywhere}
+.room{display:inline-block;margin-top:4px;font-size:.74rem;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--gold-dark);background:rgba(245,166,35,.14);padding:3px 10px;border-radius:50px}
+.status{width:auto;min-width:140px;padding:9px 12px;font-weight:600;border-radius:50px}
+.status.new{background:#fff4dc;color:var(--gold-dark);border-color:#f5d28a}
+.status.contacted{background:#e6f0ff;color:var(--info);border-color:#b9d3ff}
+.status.accepted{background:#e3f6ec;color:var(--ok);border-color:#a9e0c4}
+.status.declined{background:#f1f2f5;color:var(--muted);border-color:#d9dde6}
+dl{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px 18px;margin:16px 0}
+dt{font-size:.7rem;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-weight:600}
+dd{font-weight:500;overflow-wrap:anywhere}
+dd a{color:var(--info);text-decoration:none;font-weight:600}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.empty{text-align:center;padding:50px 20px;color:var(--muted);background:#fff;border:1px dashed var(--line);border-radius:18px}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--navy);color:#fff;padding:12px 20px;border-radius:50px;font-size:.92rem;z-index:60;box-shadow:0 10px 30px rgba(0,0,0,.3)}
+.modal{position:fixed;inset:0;background:rgba(5,9,18,.9);z-index:50;display:grid;place-items:center;padding:16px}
+.modal-in{max-width:min(94vw,760px);max-height:94vh;display:flex;flex-direction:column;gap:10px;align-items:center}
+.modal img{max-width:100%;max-height:82vh;border-radius:12px;background:#111;object-fit:contain}
+.modal p{color:#cbd5e1;font-size:.9rem;text-align:center}
+@media(max-width:560px){.summary{grid-template-columns:repeat(2,1fr)}.actions .btn{flex:1 1 calc(50% - 8px)}.top-in .btn{min-height:40px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="login-wrap" id="loginView" hidden>
+  <form class="login" id="loginForm">
+    <div class="mark">R</div>
+    <h1>Admin login</h1>
+    <p>RSM Student Accommodation applications.</p>
+    <label for="pw">Password</label>
+    <input type="password" id="pw" autocomplete="current-password" required autofocus>
+    <button class="btn gold" type="submit" id="loginBtn">Log in</button>
+    <div class="err" id="loginErr" role="alert"></div>
+  </form>
+</div>
+
+<div id="appView" hidden>
+  <header class="top"><div class="top-in">
+    <div class="brand"><div class="mark">R</div><div>Applications<small>RSM Student Accommodation</small></div></div>
+    <button class="btn ghost sm" id="refreshBtn" type="button">Refresh</button>
+    <button class="btn sm" id="logoutBtn" type="button">Log out</button>
+  </div></header>
+  <main>
+    <div class="summary" id="summary"></div>
+    <div class="tools">
+      <input type="search" id="q" placeholder="Search name, student no. or phone" aria-label="Search applications">
+      <select id="filter" aria-label="Filter by status">
+        <option value="all">All statuses</option>
+        <option value="new">New</option>
+        <option value="contacted">Contacted</option>
+        <option value="accepted">Accepted</option>
+        <option value="declined">Declined</option>
+      </select>
+    </div>
+    <div class="list" id="list" aria-live="polite"></div>
+  </main>
+</div>
+
+<div class="modal" id="modal" hidden>
+  <div class="modal-in">
+    <img id="modalImg" alt="Applicant ID photo">
+    <p id="modalCap"></p>
+    <button class="btn gold" id="modalClose" type="button">Close</button>
+  </div>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+let apps = [];
+let timer;
+
+function h(tag, attrs, ...kids) {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (k === 'class') el.className = v;
+    else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+    else if (v !== false && v != null) el.setAttribute(k, v === true ? '' : v);
+  }
+  for (const kid of kids.flat()) if (kid != null) el.append(kid.nodeType ? kid : document.createTextNode(String(kid)));
+  return el;
+}
+
+async function api(path, opts = {}) {
+  const o = { credentials: 'same-origin', ...opts, headers: { ...(opts.headers || {}) } };
+  if (o.method && o.method !== 'GET') o.headers['X-Admin'] = '1';
+  if (o.body && typeof o.body !== 'string') { o.headers['Content-Type'] = 'application/json'; o.body = JSON.stringify(o.body); }
+  const r = await fetch(path, o);
+  if (r.status === 401 && path !== '/api/admin/login') { showLogin(); throw new Error('Please log in.'); }
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error || 'Something went wrong.');
+  return j;
+}
+
+function toast(msg) {
+  const t = $('toast'); t.textContent = msg; t.hidden = false;
+  clearTimeout(toast.t); toast.t = setTimeout(() => (t.hidden = true), 2600);
+}
+
+function showLogin() {
+  clearInterval(timer);
+  $('appView').hidden = true; $('loginView').hidden = false; $('pw').focus();
+}
+function showApp() {
+  $('loginView').hidden = true; $('appView').hidden = false;
+  load(); clearInterval(timer);
+  timer = setInterval(() => { if (!document.hidden) load(true); }, 60000);
+}
+
+$('loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault(); $('loginErr').textContent = '';
+  $('loginBtn').disabled = true;
+  try { await api('/api/admin/login', { method: 'POST', body: { password: $('pw').value } }); $('pw').value = ''; showApp(); }
+  catch (ex) { $('loginErr').textContent = ex.message; }
+  $('loginBtn').disabled = false;
+});
+$('logoutBtn').addEventListener('click', async () => { try { await api('/api/admin/logout', { method: 'POST' }); } catch (_) {} showLogin(); });
+$('refreshBtn').addEventListener('click', () => load());
+$('q').addEventListener('input', render);
+$('filter').addEventListener('change', render);
+
+async function load(quiet) {
+  try { apps = (await api('/api/admin/applications')).applications; render(); if (!quiet) toast('Up to date'); }
+  catch (ex) { if (!quiet) toast(ex.message); }
+}
+
+const STATUS_LABEL = { new: 'New', contacted: 'Contacted', accepted: 'Accepted', declined: 'Declined' };
+const fmt = (iso) => new Date(iso).toLocaleString('en-ZA', { dateStyle: 'medium', timeStyle: 'short' });
+const wa = (a) => 'https://wa.me/27' + a.phone.slice(1) + '?text=' +
+  encodeURIComponent('Hi ' + a.name.split(' ')[0] + ', this is RSM Student Accommodation about your application for the ' + a.room + '.');
+
+function render() {
+  const count = (s) => apps.filter((a) => a.status === s).length;
+  $('summary').replaceChildren(
+    ...[['Total', apps.length, ''], ['New', count('new'), 'new'], ['Contacted', count('contacted'), ''], ['Accepted', count('accepted'), '']]
+      .map(([l, n, c]) => h('div', { class: 'sum ' + c }, h('b', {}, n), h('span', {}, l)))
+  );
+  document.title = (count('new') ? '(' + count('new') + ') ' : '') + 'RSM Admin | Applications';
+
+  const q = $('q').value.trim().toLowerCase(), f = $('filter').value;
+  const shown = apps.filter((a) =>
+    (f === 'all' || a.status === f) &&
+    (!q || [a.name, a.studentNumber, a.phone].some((v) => v.toLowerCase().includes(q))));
+
+  if (!shown.length) {
+    $('list').replaceChildren(h('div', { class: 'empty' }, apps.length ? 'No applications match your search.' : 'No applications yet. They will show up here as students apply.'));
+    return;
+  }
+  $('list').replaceChildren(...shown.map(card));
+}
+
+function card(a) {
+  const sel = h('select', { class: 'status ' + a.status, 'aria-label': 'Status for ' + a.name,
+    onchange: async (e) => {
+      const prev = a.status;
+      try { await api('/api/admin/applications/' + a.id, { method: 'PATCH', body: { status: e.target.value } }); a.status = e.target.value; render(); toast('Marked ' + STATUS_LABEL[a.status]); }
+      catch (ex) { e.target.value = prev; toast(ex.message); }
+    } },
+    ...Object.entries(STATUS_LABEL).map(([v, l]) => h('option', { value: v, selected: v === a.status }, l)));
+
+  let armed = false, armTimer;
+  const del = h('button', { class: 'btn danger sm', type: 'button',
+    onclick: async () => {
+      if (!armed) { armed = true; del.textContent = 'Tap again to delete'; del.classList.add('armed'); armTimer = setTimeout(() => { armed = false; del.textContent = 'Delete'; del.classList.remove('armed'); }, 4000); return; }
+      clearTimeout(armTimer);
+      try { await api('/api/admin/applications/' + a.id, { method: 'DELETE' }); apps = apps.filter((x) => x.id !== a.id); render(); toast('Deleted, including the ID photo'); }
+      catch (ex) { toast(ex.message); }
+    } }, 'Delete');
+
+  return h('article', { class: 'card' + (a.status === 'new' ? ' is-new' : '') },
+    h('div', { class: 'row1' }, h('div', {}, h('h3', {}, a.name), h('span', { class: 'room' }, a.room)), sel),
+    h('dl', {},
+      h('div', {}, h('dt', {}, 'Student number'), h('dd', {}, a.studentNumber)),
+      h('div', {}, h('dt', {}, 'University'), h('dd', {}, a.university)),
+      h('div', {}, h('dt', {}, 'Phone'), h('dd', {}, h('a', { href: 'tel:' + a.phone }, a.phone))),
+      h('div', {}, h('dt', {}, 'Applied'), h('dd', {}, fmt(a.createdAt)))),
+    h('div', { class: 'actions' },
+      h('button', { class: 'btn gold sm', type: 'button', onclick: () => viewId(a) }, 'View ID'),
+      h('a', { class: 'btn ghost sm', href: wa(a), target: '_blank', rel: 'noopener', style: 'text-decoration:none;display:inline-flex;align-items:center;justify-content:center' }, 'WhatsApp'),
+      del));
+}
+
+function viewId(a) {
+  $('modalImg').src = '/api/admin/applications/' + a.id + '/id';
+  $('modalCap').textContent = a.name + ' · ' + a.studentNumber;
+  $('modal').hidden = false;
+}
+function closeModal() { $('modal').hidden = true; $('modalImg').removeAttribute('src'); }
+$('modalClose').addEventListener('click', closeModal);
+$('modal').addEventListener('click', (e) => { if (e.target === $('modal')) closeModal(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+
+(async () => { try { await api('/api/admin/me'); showApp(); } catch (_) { showLogin(); } })();
+</script>
+</body>
+</html>
