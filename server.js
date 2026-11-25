@@ -310,6 +310,30 @@ app.patch('/api/admin/applications/:id', requireAdmin, async (req, res) => {
   }
 });
 
+// How many places the landlord has per room type (editable on the admin page)
+app.get('/api/admin/rooms', requireAdmin, async (req, res) => {
+  try {
+    res.set('Cache-Control', 'no-store');
+    res.json({ capacity: await store.getCapacity() });
+  } catch (e) {
+    console.error('rooms failed:', e.message);
+    res.status(500).json({ error: 'Could not load room totals.' });
+  }
+});
+
+app.put('/api/admin/rooms', requireAdmin, async (req, res) => {
+  try {
+    const { room, total } = req.body || {};
+    if (!ROOMS.includes(room) || !Number.isInteger(total) || total < 0 || total > 500)
+      return res.status(400).json({ error: 'Enter a whole number from 0 to 500.' });
+    await store.setCapacity(room, total);
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('rooms save failed:', e.message);
+    res.status(500).json({ error: 'Could not save.' });
+  }
+});
+
 app.post('/api/admin/applications/:id/accept-email', requireAdmin, async (req, res) => {
   try {
     if (!UUID.test(req.params.id)) return res.status(404).json({ error: 'Not found.' });

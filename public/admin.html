@@ -75,6 +75,29 @@ dd a{color:var(--info);text-decoration:none;font-weight:600}
 .modal-in{max-width:min(94vw,760px);max-height:94vh;display:flex;flex-direction:column;gap:10px;align-items:center}
 .modal img{max-width:100%;max-height:82vh;border-radius:12px;background:#111;object-fit:contain}
 .modal p{color:#cbd5e1;font-size:.9rem;text-align:center}
+/* rooms left */
+.rooms-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin:0 0 8px}
+.rooms-head b{font:700 1.05rem 'Outfit';color:var(--navy)}
+.rooms-head span{font-size:.8rem;color:var(--muted)}
+.rooms{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px}
+.rm{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.rm h4{font:600 .74rem 'Inter';text-transform:uppercase;letter-spacing:1px;color:var(--muted)}
+.rm .left{font:800 1.9rem 'Outfit';color:var(--navy);line-height:1.15}
+.rm .left small{font:500 .85rem 'Inter';color:var(--muted);margin-left:4px}
+.bar{height:8px;border-radius:8px;background:#e9edf5;overflow:hidden;margin:8px 0 6px}
+.bar i{display:block;height:100%;background:var(--gold);border-radius:8px}
+.rm.full .left{color:var(--bad)}
+.rm.full .bar i{background:var(--bad)}
+.rm .sub{font-size:.78rem;color:var(--muted)}
+.rm .lnk{align-self:flex-start;margin-top:8px;background:none;border:0;color:var(--info);font-weight:600;font-size:.85rem;cursor:pointer;padding:6px 0;min-height:36px}
+.rm label{font-size:.78rem;margin:6px 0 4px}
+.rm input[type=number]{width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;color:var(--navy)}
+.rm .row2{display:flex;gap:8px;margin-top:8px}
+.rm .row2 .btn{flex:1;min-height:40px;padding:8px 10px;font-size:.88rem}
+#accAvail{font-weight:600;font-size:.9rem;padding:10px 12px;border-radius:10px}
+#accAvail.ok{background:#e3f6ec;color:var(--ok)}
+#accAvail.warn{background:#fdeceb;color:var(--bad)}
+@media(max-width:700px){.rooms{grid-template-columns:1fr}}
 /* accept dialog */
 .dlg{width:100%;max-width:460px;max-height:94vh;overflow:auto;background:#fff;border-radius:20px;padding:24px;display:flex;flex-direction:column;gap:12px}
 .dlg h2{font-size:1.3rem}
@@ -110,6 +133,8 @@ dd a{color:var(--info);text-decoration:none;font-weight:600}
   </div></header>
   <main>
     <div class="summary" id="summary"></div>
+    <div class="rooms-head"><b>Places left</b><span>Set your total for each room type. For Sharing, count each bed (2 per room).</span></div>
+    <div class="rooms" id="rooms"></div>
     <div class="tools">
       <input type="search" id="q" placeholder="Search name, student no. or phone" aria-label="Search applications">
       <select id="filter" aria-label="Filter by status">
@@ -135,6 +160,7 @@ dd a{color:var(--info);text-decoration:none;font-weight:600}
   <div class="dlg">
     <h2 id="accTitle">Accept applicant?</h2>
     <p id="accText"></p>
+    <div id="accAvail" hidden></div>
     <div id="accNoteWrap">
       <label for="accNote">Message for the student (optional)</label>
       <textarea id="accNote" maxlength="1000" placeholder="e.g. You can move in from 1 February. Please bring a copy of your ID."></textarea>
@@ -178,7 +204,7 @@ async function api(path, opts = {}) {
 
 function toast(msg) {
   const t = $('toast'); t.textContent = msg; t.hidden = false;
-  clearTimeout(toast.t); toast.t = setTimeout(() => (t.hidden = true), 2600);
+  clearTimeout(toast.t); toast.t = setTimeout(() => (t.hidden = true), 4200);
 }
 
 function showLogin() {
@@ -204,9 +230,67 @@ $('q').addEventListener('input', render);
 $('filter').addEventListener('change', render);
 
 async function load(quiet) {
-  try { apps = (await api('/api/admin/applications')).applications; render(); if (!quiet) toast('Up to date'); }
+  try { const [r1, r2] = await Promise.all([api('/api/admin/applications'), api('/api/admin/rooms')]); apps = r1.applications; cap = r2.capacity; render(); if (!quiet) toast('Up to date'); }
   catch (ex) { if (!quiet) toast(ex.message); }
 }
+
+/* ---- places left ---- */
+let cap = {}, editingRoom = null;
+const ROOM_NAMES = ['Bachelor Room', 'Single Room', 'Sharing Room'];
+
+function roomStats(room) {
+  const total = cap[room] || 0;
+  const taken = apps.filter((a) => a.room === room && a.status === 'accepted').length;
+  const waiting = apps.filter((a) => a.room === room && (a.status === 'new' || a.status === 'contacted')).length;
+  return { total, taken, waiting, left: total - taken };
+}
+const places = (n) => n + (n === 1 ? ' place' : ' places');
+
+function renderRooms() {
+  if (editingRoom) return; // do not wipe a total the landlord is typing
+  $('rooms').replaceChildren(...ROOM_NAMES.map(roomTile));
+}
+
+function roomTile(room) {
+  const s = roomStats(room), set = s.total > 0 || s.taken > 0;
+  const short = room.replace(' Room', '');
+  const full = set && s.left <= 0;
+
+  if (editingRoom === room) {
+    const input = h('input', { type: 'number', id: 'capInput', min: '0', max: '500', step: '1', inputmode: 'numeric', value: s.total });
+    const save = async () => {
+      const n = Number(input.value);
+      if (!Number.isInteger(n) || n < 0 || n > 500) { toast('Enter a whole number from 0 to 500'); return; }
+      try { await api('/api/admin/rooms', { method: 'PUT', body: { room, total: n } }); cap[room] = n; editingRoom = null; renderRooms(); toast(short + ' total saved'); }
+      catch (ex) { toast(ex.message); }
+    };
+    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') save(); });
+    return h('div', { class: 'rm', 'data-room': room },
+      h('h4', {}, short),
+      h('label', { for: 'capInput' }, 'Total places'),
+      input,
+      h('div', { class: 'sub' }, room === 'Sharing Room' ? 'Count each bed: 2 per room.' : 'How many students you can house.'),
+      h('div', { class: 'row2' },
+        h('button', { class: 'btn gold', type: 'button', onclick: save }, 'Save'),
+        h('button', { class: 'btn ghost', type: 'button', onclick: () => { editingRoom = null; renderRooms(); } }, 'Cancel')));
+  }
+
+  const pct = s.total > 0 ? Math.min(100, Math.round((s.taken / s.total) * 100)) : 0;
+  const bigText = !set ? '-' : s.left < 0 ? 'Over by ' + -s.left : s.left === 0 ? 'Full' : String(s.left);
+  return h('div', { class: 'rm' + (full ? ' full' : ''), 'data-room': room },
+    h('h4', {}, short),
+    h('div', { class: 'left' }, bigText, s.left > 0 ? h('small', {}, 'left') : null),
+    set ? h('div', { class: 'bar', role: 'img', 'aria-label': s.taken + ' of ' + s.total + ' taken' }, h('i', { style: 'width:' + pct + '%' })) : null,
+    h('div', { class: 'sub' }, set ? s.taken + ' of ' + s.total + ' taken, ' + s.waiting + ' waiting' : 'Set how many places you have'),
+    h('button', { class: 'lnk', type: 'button',
+      onclick: () => { editingRoom = room; const old = document.querySelector('[data-room="' + room + '"]'); old.replaceWith(roomTile(room)); $('capInput').focus(); $('capInput').select(); } },
+      set ? 'Edit total' : 'Set total'));
+}
+
+const leftNote = (room) => {
+  const s = roomStats(room);
+  return s.total > 0 ? (s.left > 0 ? ' ' + places(s.left) + ' of ' + room + ' left.' : ' ' + room + ' is now full.') : '';
+};
 
 const STATUS_LABEL = { new: 'New', contacted: 'Contacted', accepted: 'Accepted', declined: 'Declined' };
 const fmt = (iso) => new Date(iso).toLocaleString('en-ZA', { dateStyle: 'medium', timeStyle: 'short' });
@@ -214,6 +298,7 @@ const wa = (a) => 'https://wa.me/27' + a.phone.slice(1) + '?text=' +
   encodeURIComponent('Hi ' + a.name.split(' ')[0] + ', this is RSM Student Accommodation about your application for the ' + a.room + '.');
 
 function render() {
+  renderRooms();
   const count = (s) => apps.filter((a) => a.status === s).length;
   $('summary').replaceChildren(
     ...[['Total', apps.length, ''], ['New', count('new'), 'new'], ['Contacted', count('contacted'), ''], ['Accepted', count('accepted'), '']]
@@ -238,7 +323,7 @@ function card(a) {
     onchange: async (e) => {
       const prev = a.status;
       if (e.target.value === 'accepted') { e.target.value = prev; openAccept(a, 'accept'); return; }
-      try { await api('/api/admin/applications/' + a.id, { method: 'PATCH', body: { status: e.target.value } }); a.status = e.target.value; render(); toast('Marked ' + STATUS_LABEL[a.status]); }
+      try { await api('/api/admin/applications/' + a.id, { method: 'PATCH', body: { status: e.target.value } }); a.status = e.target.value; render(); toast('Marked ' + STATUS_LABEL[a.status] + (prev === 'accepted' ? '.' + leftNote(a.room) : '')); }
       catch (ex) { e.target.value = prev; toast(ex.message); }
     } },
     ...Object.entries(STATUS_LABEL).map(([v, l]) => h('option', { value: v, selected: v === a.status }, l)));
@@ -295,6 +380,12 @@ function openAccept(a, m) {
   } else {
     $('accText').textContent = a.name + ' did not give an email address, so no email can be sent. You can still mark them as accepted.';
   }
+  const st = roomStats(a.room), av = $('accAvail');
+  if (m === 'accept' && st.total > 0) {
+    if (st.left <= 0) { av.textContent = 'All ' + st.total + ' ' + a.room + ' places are already taken. Accepting goes over your total.'; av.className = 'warn'; }
+    else { av.textContent = 'After accepting, ' + places(st.left - 1) + ' of ' + a.room + ' will be left (of ' + st.total + ').'; av.className = 'ok'; }
+    av.hidden = false;
+  } else av.hidden = true;
   $('accNoteWrap').hidden = !a.email;
   $('accSend').hidden = !a.email;
   $('accSend').textContent = resend ? 'Send email' : 'Accept and send email';
@@ -326,7 +417,7 @@ async function doAccept(notify) {
       const r = await api('/api/admin/applications/' + a.id, { method: 'PATCH', body: { status: 'accepted', notify, note: $('accNote').value } });
       a.status = 'accepted';
       if (r.email === 'sent') a.acceptedEmailedAt = new Date().toISOString();
-      toast('Accepted. ' + (r.email ? ACCEPT_MSG(r.email, a) : 'No email sent'));
+      toast('Accepted. ' + (r.email ? ACCEPT_MSG(r.email, a) + '.' : 'No email sent.') + leftNote(a.room));
     }
     closeAccept(); render();
   } catch (ex) { toast(ex.message); }
