@@ -75,6 +75,15 @@ dd a{color:var(--info);text-decoration:none;font-weight:600}
 .modal-in{max-width:min(94vw,760px);max-height:94vh;display:flex;flex-direction:column;gap:10px;align-items:center}
 .modal img{max-width:100%;max-height:82vh;border-radius:12px;background:#111;object-fit:contain}
 .modal p{color:#cbd5e1;font-size:.9rem;text-align:center}
+/* accept dialog */
+.dlg{width:100%;max-width:460px;max-height:94vh;overflow:auto;background:#fff;border-radius:20px;padding:24px;display:flex;flex-direction:column;gap:12px}
+.dlg h2{font-size:1.3rem}
+.dlg p{color:var(--muted);font-size:.93rem}
+.dlg textarea{width:100%;min-height:110px;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;font:inherit;color:var(--navy);resize:vertical}
+.dlg textarea:focus{outline:3px solid rgba(245,166,35,.45);border-color:var(--gold)}
+.dlg .btns{display:grid;gap:8px;margin-top:4px}
+.dlg .btn[disabled]{opacity:.5;cursor:not-allowed}
+.hint{font-size:.8rem;color:var(--muted);margin-top:4px}
 @media(max-width:560px){.summary{grid-template-columns:repeat(2,1fr)}.actions .btn{flex:1 1 calc(50% - 8px)}.top-in .btn{min-height:40px}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -120,6 +129,22 @@ dd a{color:var(--info);text-decoration:none;font-weight:600}
     <img id="modalImg" alt="Applicant ID photo">
     <p id="modalCap"></p>
     <button class="btn gold" id="modalClose" type="button">Close</button>
+  </div>
+</div>
+<div class="modal" id="acceptModal" hidden role="dialog" aria-modal="true" aria-labelledby="accTitle">
+  <div class="dlg">
+    <h2 id="accTitle">Accept applicant?</h2>
+    <p id="accText"></p>
+    <div id="accNoteWrap">
+      <label for="accNote">Message for the student (optional)</label>
+      <textarea id="accNote" maxlength="1000" placeholder="e.g. You can move in from 1 February. Please bring a copy of your ID."></textarea>
+      <div class="hint">Shown in the email under "A message from us".</div>
+    </div>
+    <div class="btns">
+      <button class="btn gold" id="accSend" type="button">Accept and send email</button>
+      <button class="btn ghost" id="accNoMail" type="button">Accept without email</button>
+      <button class="btn ghost" id="accCancel" type="button">Cancel</button>
+    </div>
   </div>
 </div>
 <div class="toast" id="toast" hidden></div>
@@ -212,6 +237,7 @@ function card(a) {
   const sel = h('select', { class: 'status ' + a.status, 'aria-label': 'Status for ' + a.name,
     onchange: async (e) => {
       const prev = a.status;
+      if (e.target.value === 'accepted') { e.target.value = prev; openAccept(a, 'accept'); return; }
       try { await api('/api/admin/applications/' + a.id, { method: 'PATCH', body: { status: e.target.value } }); a.status = e.target.value; render(); toast('Marked ' + STATUS_LABEL[a.status]); }
       catch (ex) { e.target.value = prev; toast(ex.message); }
     } },
@@ -237,6 +263,10 @@ function card(a) {
     h('div', { class: 'actions' },
       h('button', { class: 'btn gold sm', type: 'button', onclick: () => viewId(a) }, 'View ID'),
       h('a', { class: 'btn ghost sm', href: wa(a), target: '_blank', rel: 'noopener', style: 'text-decoration:none;display:inline-flex;align-items:center;justify-content:center' }, 'WhatsApp'),
+      a.status === 'accepted' && a.email
+        ? h('button', { class: 'btn ghost sm', type: 'button', onclick: () => openAccept(a, 'resend') },
+            a.acceptedEmailedAt ? 'Resend acceptance email' : 'Send acceptance email')
+        : null,
       del));
 }
 
@@ -248,7 +278,64 @@ function viewId(a) {
 function closeModal() { $('modal').hidden = true; $('modalImg').removeAttribute('src'); }
 $('modalClose').addEventListener('click', closeModal);
 $('modal').addEventListener('click', (e) => { if (e.target === $('modal')) closeModal(); });
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeModal(); closeAccept(); } });
+
+/* ---- accept / resend acceptance email ---- */
+let pending = null, mode = 'accept', busy = false;
+
+function openAccept(a, m) {
+  pending = a; mode = m;
+  const resend = m === 'resend';
+  $('accTitle').textContent = resend ? 'Email ' + a.name + '?' : 'Accept ' + a.name + '?';
+  $('accNote').value = '';
+  if (a.email) {
+    $('accText').textContent = resend
+      ? 'This sends the acceptance email to ' + a.email + (a.acceptedEmailedAt ? ' again.' : '.')
+      : 'We can email ' + a.email + ' to tell them the good news. Nothing is sent until you press the button.';
+  } else {
+    $('accText').textContent = a.name + ' did not give an email address, so no email can be sent. You can still mark them as accepted.';
+  }
+  $('accNoteWrap').hidden = !a.email;
+  $('accSend').hidden = !a.email;
+  $('accSend').textContent = resend ? 'Send email' : 'Accept and send email';
+  $('accNoMail').hidden = resend;
+  $('accNoMail').textContent = a.email ? 'Accept without email' : 'Mark as accepted';
+  $('acceptModal').hidden = false;
+  (a.email ? $('accNote') : $('accNoMail')).focus();
+}
+function closeAccept() { $('acceptModal').hidden = true; pending = null; }
+
+const ACCEPT_MSG = (r, a) => ({
+  sent: 'Email sent to ' + a.email,
+  'already-sent': 'Accepted. They were already emailed earlier',
+  'no-email': 'Accepted. No email sent: the student gave none',
+  failed: 'The email could not be sent. Try "Resend" on the card',
+  off: 'Accepted. Email alerts are not set up yet',
+  missing: 'Application not found',
+}[r] || 'Done');
+
+async function doAccept(notify) {
+  const a = pending; if (!a || busy) return;
+  busy = true;
+  try {
+    if (mode === 'resend') {
+      const r = await api('/api/admin/applications/' + a.id + '/accept-email', { method: 'POST', body: { note: $('accNote').value } });
+      if (r.email === 'sent') a.acceptedEmailedAt = new Date().toISOString();
+      toast(ACCEPT_MSG(r.email, a));
+    } else {
+      const r = await api('/api/admin/applications/' + a.id, { method: 'PATCH', body: { status: 'accepted', notify, note: $('accNote').value } });
+      a.status = 'accepted';
+      if (r.email === 'sent') a.acceptedEmailedAt = new Date().toISOString();
+      toast('Accepted. ' + (r.email ? ACCEPT_MSG(r.email, a) : 'No email sent'));
+    }
+    closeAccept(); render();
+  } catch (ex) { toast(ex.message); }
+  busy = false;
+}
+$('accSend').addEventListener('click', () => doAccept(true));
+$('accNoMail').addEventListener('click', () => doAccept(false));
+$('accCancel').addEventListener('click', closeAccept);
+$('acceptModal').addEventListener('click', (e) => { if (e.target === $('acceptModal')) closeAccept(); });
 
 (async () => { try { await api('/api/admin/me'); showApp(); } catch (_) { showLogin(); } })();
 </script>

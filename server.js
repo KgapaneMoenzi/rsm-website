@@ -53,6 +53,14 @@ function sniffImage(buf) {
   return null;
 }
 
+// keeps line breaks (unlike clean) for the optional note the landlord writes in the acceptance email
+const cleanNote = (s) =>
+  String(s == null ? '' : s)
+    .replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, '')
+    .replace(/\r\n?/g, '\n')
+    .trim()
+    .slice(0, 1000);
+
 function normalisePhone(raw) {
   const p = String(raw || '').replace(/[\s\-().]/g, '');
   if (/^(\+?27)\d{9}$/.test(p)) return '0' + p.slice(-9);
@@ -223,7 +231,7 @@ const loginLimiter = rateLimit({
   message: { error: 'Too many attempts. Please wait 15 minutes and try again.' },
 });
 
-app.use('/api/admin', express.json({ limit: '2kb' }));
+app.use('/api/admin', express.json({ limit: '8kb' }));
 
 app.post('/api/admin/login', loginLimiter, (req, res) => {
   const pw = req.body && req.body.password;
@@ -268,16 +276,48 @@ app.get('/api/admin/applications/:id/id', requireAdmin, async (req, res) => {
   }
 });
 
+// Sends the "you have been accepted" email. Returns what happened so the admin page can say so truthfully.
+async function sendAcceptance(id, note, force) {
+  if (!mailer.enabled) return 'off';
+  const a = await store.getForNotify(id);
+  if (!a) return 'missing';
+  if (!a.email) return 'no-email';
+  if (a.acceptedEmailedAt && !force) return 'already-sent';
+  try {
+    await mailer.sendAccepted(a, note);
+    await store.markAcceptedEmailed(id);
+    return 'sent';
+  } catch (e) {
+    console.error('acceptance email failed:', e.message);
+    return 'failed';
+  }
+}
+
 app.patch('/api/admin/applications/:id', requireAdmin, async (req, res) => {
   try {
     const status = req.body && req.body.status;
     if (!UUID.test(req.params.id) || !STATUSES.includes(status))
       return res.status(400).json({ error: 'Invalid request.' });
     const ok = await store.setStatus(req.params.id, status);
-    res.status(ok ? 200 : 404).json(ok ? { ok: true } : { error: 'Not found.' });
+    if (!ok) return res.status(404).json({ error: 'Not found.' });
+    let email = null;
+    if (status === 'accepted' && req.body.notify === true)
+      email = await sendAcceptance(req.params.id, cleanNote(req.body.note), false);
+    res.json({ ok: true, email });
   } catch (e) {
     console.error('status failed:', e.message);
     res.status(500).json({ error: 'Could not update.' });
+  }
+});
+
+app.post('/api/admin/applications/:id/accept-email', requireAdmin, async (req, res) => {
+  try {
+    if (!UUID.test(req.params.id)) return res.status(404).json({ error: 'Not found.' });
+    const email = await sendAcceptance(req.params.id, cleanNote(req.body && req.body.note), true);
+    res.json({ ok: true, email });
+  } catch (e) {
+    console.error('accept-email failed:', e.message);
+    res.status(500).json({ error: 'Could not send the email.' });
   }
 });
 
