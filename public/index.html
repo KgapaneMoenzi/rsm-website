@@ -49,17 +49,21 @@ nav.scrolled{padding:12px 0}
 .burger.open span:nth-child(3){top:10px;transform:rotate(-45deg)}
 
 /* HERO */
-.hero{min-height:100vh;position:relative;display:flex;align-items:center;color:#fff;overflow:hidden;
-  background:radial-gradient(900px 600px at 85% 30%,rgba(245,166,35,.12),transparent 60%),linear-gradient(135deg,#0b1220 0%,#111c33 60%,#0b1220 100%)}
+.hero{min-height:100vh;position:relative;display:flex;align-items:center;color:#fff;overflow:hidden;background:var(--navy)}
 .hero::after{content:'';position:absolute;width:520px;height:520px;border-radius:50%;background:var(--gold);filter:blur(180px);opacity:.18;right:-140px;bottom:-120px}
 .hero .container{position:relative;z-index:2;padding-top:110px;padding-bottom:140px}
-.hero .container{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:56px;align-items:center}
 .hero-content{max-width:760px;animation:fadeUp 1s ease both}
-.hero-photo{margin:0;animation:fadeUp 1s .15s ease both;position:relative}
-.hero-photo img{width:100%;display:block;border-radius:22px;aspect-ratio:16/10;object-fit:cover;box-shadow:0 30px 70px rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.12)}
-.hero-photo figcaption{position:absolute;left:16px;bottom:16px;right:16px;background:rgba(11,18,32,.82);backdrop-filter:blur(6px);color:#fff;font-size:.9rem;font-weight:600;padding:10px 16px;border-radius:14px;display:flex;align-items:center;gap:8px}
-.hero-photo figcaption i{width:8px;height:8px;border-radius:50%;background:var(--gold);flex:none}
-@media(max-width:960px){.hero .container{grid-template-columns:1fr;gap:34px}.hero-photo{max-width:560px}}
+.hero-slides{position:absolute;inset:0;z-index:0}
+.hero-slides::after{content:'';position:absolute;inset:0;background:linear-gradient(100deg,rgba(11,18,32,.94) 0%,rgba(11,18,32,.78) 45%,rgba(11,18,32,.45) 100%),linear-gradient(0deg,rgba(11,18,32,.85) 0%,transparent 35%)}
+.hero-slides img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transform:scale(1.04);transition:opacity 1.6s ease,transform 7s ease-out}
+.hero-slides img.on{opacity:1;transform:scale(1.12)}
+.hero-cap{position:absolute;z-index:3;right:max(20px,calc((100vw - 1100px)/2));bottom:112px;display:flex;align-items:center;gap:14px;font-size:.82rem;color:#e4e9f3}
+.hero-cap b{font-weight:600;background:rgba(11,18,32,.7);padding:6px 14px;border-radius:50px}
+.hero-dots{display:flex;gap:7px}
+.hero-dots button{width:9px;height:9px;border-radius:50%;border:0;padding:0;background:rgba(255,255,255,.4);cursor:pointer}
+.hero-dots button.on{background:var(--gold);width:24px;border-radius:6px}
+@media(max-width:700px){.hero-cap{left:20px;right:84px;bottom:96px;justify-content:space-between}.hero-cap b{font-size:.75rem}}
+@media(prefers-reduced-motion:reduce){.hero-slides img{transition:opacity .01s;transform:none!important}}
 .hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(245,166,35,.15);border:1px solid rgba(245,166,35,.5);color:var(--gold2);padding:8px 18px;border-radius:50px;font-weight:600;font-size:.8rem;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:26px}
 .hero-badge i{width:8px;height:8px;border-radius:50%;background:var(--gold);box-shadow:0 0 0 0 rgba(245,166,35,.7);animation:pulse 2s infinite}
 .hero h1{font-size:clamp(2.6rem,5.2vw,4.6rem);color:#fff;font-weight:800;letter-spacing:-1.5px;margin-bottom:22px}
@@ -332,6 +336,14 @@ html{-webkit-text-size-adjust:100%}
 </nav>
 
 <header class="hero" id="home">
+  <div class="hero-slides" id="heroSlides" aria-hidden="true">
+    <img src="images/ump-campus.jpg" alt="" data-cap="University of Mpumalanga main entrance" fetchpriority="high">
+    <img src="images/campus-palms.jpg" alt="" data-cap="The palm-lined road to campus" loading="lazy">
+    <img src="images/campus-buildings.jpg" alt="" data-cap="Campus buildings" loading="lazy">
+    <img src="images/campus-library.jpg" alt="" data-cap="Thoko Mayekiso Library" loading="lazy">
+    <img src="images/campus-lake.jpg" alt="" data-cap="The campus lake" loading="lazy">
+    <img src="images/campus-fountains.jpg" alt="" data-cap="Campus fountains" loading="lazy">
+  </div>
   <div class="container">
     <div class="hero-content">
       <span class="hero-badge"><i></i> Exclusive UMP Student Accommodation</span>
@@ -342,11 +354,8 @@ html{-webkit-text-size-adjust:100%}
         <a href="#rooms" class="btn btn-ghost">View Rooms</a>
       </div>
     </div>
-    <figure class="hero-photo">
-      <img src="images/ump-campus.jpg" alt="University of Mpumalanga main entrance" fetchpriority="high">
-      <figcaption><i></i> Daily transport to the University of Mpumalanga</figcaption>
-    </figure>
   </div>
+  <div class="hero-cap"><b id="heroCap">University of Mpumalanga main entrance</b><div class="hero-dots" id="heroDots"></div></div>
   <div class="scroll-hint"></div>
 </header>
 
@@ -606,6 +615,17 @@ html{-webkit-text-size-adjust:100%}
 const nav=document.getElementById('nav');
 const onScroll=()=>nav.classList.toggle('scrolled',window.scrollY>40);
 onScroll();window.addEventListener('scroll',onScroll,{passive:true});
+
+// Hero slideshow
+(function(){
+  const imgs=[...document.querySelectorAll('#heroSlides img')],dots=document.getElementById('heroDots'),cap=document.getElementById('heroCap');
+  let i=0,t;
+  imgs.forEach((_,k)=>{const d=document.createElement('button');d.type='button';d.setAttribute('aria-label','Show photo '+(k+1));d.onclick=()=>{show(k);start()};dots.appendChild(d)});
+  function show(k){i=k;imgs.forEach((m,j)=>m.classList.toggle('on',j===k));[...dots.children].forEach((d,j)=>d.classList.toggle('on',j===k));cap.textContent=imgs[k].dataset.cap}
+  function start(){clearInterval(t);if(!matchMedia('(prefers-reduced-motion: reduce)').matches)t=setInterval(()=>show((i+1)%imgs.length),5500)}
+  show(0);start();
+  document.addEventListener('visibilitychange',()=>document.hidden?clearInterval(t):start());
+})();
 
 // Photo lightbox
 (function(){
