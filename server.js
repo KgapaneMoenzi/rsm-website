@@ -121,7 +121,7 @@ app.use(
         scriptSrc: ["'self'", "'unsafe-inline'"],
         styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
         fontSrc: ['https://fonts.gstatic.com'],
-        imgSrc: ["'self'", 'data:', 'blob:', 'https://images.unsplash.com'], // unsplash = hero banner photo
+        imgSrc: ["'self'", 'data:', 'blob:'],
         connectSrc: ["'self'"],
         mediaSrc: ["'self'"],
         objectSrc: ["'none'"],
