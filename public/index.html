@@ -390,6 +390,9 @@ html{-webkit-text-size-adjust:100%}
       <button class="ph" type="button" aria-label="Enlarge Bathroom photo"><img src="images/bathroom.jpg" alt="Clean tiled bathroom with toilet and basin" loading="lazy" style="object-position:center 62%"><span>Bathroom</span></button>
       <button class="ph" type="button" aria-label="Enlarge Bedroom photo"><img src="images/bedroom-2.jpg" alt="Single bedroom with green bed and curtained window" loading="lazy" style="object-position:center 48%"><span>Bedroom</span></button>
       <button class="ph" type="button" aria-label="Enlarge Kitchen photo"><img src="images/kitchen.jpg" alt="Tiled kitchen with stove, fridge and microwave" loading="lazy" style="object-position:center 58%"><span>Kitchen</span></button>
+      <button class="ph" type="button" aria-label="Enlarge Bedroom photo"><img src="images/bedroom-3.jpg" alt="Single bed with navy headboard, marble feature wall and patterned bedding" loading="lazy" style="object-position:center 55%"><span>Bedroom</span></button>
+      <button class="ph" type="button" aria-label="Enlarge Bedroom photo"><img src="images/bedroom-4.jpg" alt="Single bed with green headboard and red blanket beside gold curtains" loading="lazy" style="object-position:center 50%"><span>Bedroom</span></button>
+      <button class="ph" type="button" aria-label="Enlarge Study desk photo"><img src="images/study-desk.jpg" alt="White study desk and chair in a student room" loading="lazy" style="object-position:center 60%"><span>Study desk</span></button>
       </div>
   </div>
 </section>
@@ -399,7 +402,7 @@ html{-webkit-text-size-adjust:100%}
   <div class="container">
     <div class="video-grid">
       <div class="video-wrap reveal">
-        <video id="tour" controls playsinline preload="none" poster="media/walkthrough-poster.jpg" aria-label="Video tour of a single room">
+        <video id="tour" controls playsinline preload="none" poster="media/walkthrough-poster.jpg" aria-label="Video tour of a furnished room">
           <source src="media/walkthrough.mp4" type="video/mp4">
           Your browser cannot play this video.
         </video>
@@ -407,9 +410,8 @@ html{-webkit-text-size-adjust:100%}
       <div class="video-text reveal d1">
         <span class="eyebrow">Watch</span>
         <h2>A Quick Look Inside</h2>
-        <p>See what a single room looks like before you apply. It takes about 20 seconds.</p>
+        <p>Take a walk through a furnished room before you apply, with its bed, wardrobe and study desk.</p>
         <a href="#apply" class="btn btn-gold">Apply Now</a>
-        <p class="credit">Video by <a href="https://www.tiktok.com/@mycampusconnect" target="_blank" rel="noopener">@mycampusconnect</a> on TikTok</p>
       </div>
     </div>
   </div>
@@ -585,6 +587,17 @@ html{-webkit-text-size-adjust:100%}
 const nav=document.getElementById('nav');
 const onScroll=()=>nav.classList.toggle('scrolled',window.scrollY>40);
 onScroll();window.addEventListener('scroll',onScroll,{passive:true});
+
+// Photo lightbox
+(function(){
+  const lb=document.getElementById('lb'),img=document.getElementById('lbImg'),x=document.getElementById('lbx');
+  const close=()=>{lb.hidden=true;img.removeAttribute('src');document.body.style.overflow=''};
+  document.querySelectorAll('.ph').forEach(b=>b.addEventListener('click',()=>{
+    const i=b.querySelector('img');img.src=i.src;img.alt=i.alt;lb.hidden=false;document.body.style.overflow='hidden';x.focus();
+  }));
+  lb.addEventListener('click',e=>{if(e.target!==img)close()});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!lb.hidden)close()});
+})();
 
 // Mobile menu
 const burger=document.getElementById('burger'),links=document.getElementById('navLinks');
