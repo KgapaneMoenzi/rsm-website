@@ -41,7 +41,7 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const ROOMS = ['Bachelor Room', 'Single Room', 'Sharing Room'];
 const UNIVERSITIES = ['University of Mpumalanga (UMP)', 'Other University'];
-const FUNDING = ['NSFAS', 'Bursary', 'Self-funded'];
+const FUNDING = ['NSFAS', 'Private bursary', 'Self-funded'];
 const STATUSES = ['new', 'contacted', 'accepted', 'declined'];
 
 function sniffImage(buf) {
