@@ -42,7 +42,11 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const ROOMS = ['Bachelor Room', 'Single Room', 'Sharing Room'];
 const UNIVERSITIES = ['University of Mpumalanga (UMP)', 'Other University'];
 const FUNDING = ['NSFAS', 'Private bursary', 'Self-funded'];
-const STATUSES = ['new', 'contacted', 'accepted', 'declined'];
+const STATUSES = ['new', 'contacted', 'accepted', 'declined', 'left'];
+// Default monthly rent per room type (the landlord can override it per student)
+const RENT_DEFAULT = { 'Bachelor Room': 4500, 'Single Room': 4500, 'Sharing Room': 3800 };
+const isDate = (s) => typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s) && !Number.isNaN(Date.parse(s + 'T00:00:00Z'));
+const isMonth = (s) => typeof s === 'string' && /^\d{4}-(0[1-9]|1[0-2])$/.test(s);
 
 function sniffImage(buf) {
   if (!buf || buf.length < 12) return null;
@@ -355,6 +359,71 @@ app.put('/api/admin/rooms', requireAdmin, async (req, res) => {
   } catch (e) {
     console.error('rooms save failed:', e.message);
     res.status(500).json({ error: 'Could not save.' });
+  }
+});
+
+// Rent and payments (admin only)
+app.get('/api/admin/finance', requireAdmin, async (req, res) => {
+  try {
+    res.set('Cache-Control', 'no-store');
+    res.json({ rentDefault: RENT_DEFAULT, payments: await store.listPayments() });
+  } catch (e) {
+    console.error('finance failed:', e.message);
+    res.status(500).json({ error: 'Could not load payments.' });
+  }
+});
+
+app.patch('/api/admin/applications/:id/resident', requireAdmin, async (req, res) => {
+  try {
+    if (!UUID.test(req.params.id)) return res.status(404).json({ error: 'Not found.' });
+    const b = req.body || {}, f = {};
+    if ('rent' in b) {
+      if (b.rent !== null && !(Number.isInteger(b.rent) && b.rent >= 0 && b.rent <= 100000))
+        return res.status(400).json({ error: 'Rent must be a whole number of rand.' });
+      f.rent = b.rent;
+    }
+    for (const k of ['movedInOn', 'leftOn']) {
+      if (k in b) {
+        if (b[k] !== null && !isDate(b[k])) return res.status(400).json({ error: 'Please enter a valid date.' });
+        f[k] = b[k];
+      }
+    }
+    const ok = await store.setResident(req.params.id, f);
+    res.status(ok ? 200 : 404).json(ok ? { ok: true } : { error: 'Not found.' });
+  } catch (e) {
+    console.error('resident failed:', e.message);
+    res.status(500).json({ error: 'Could not save.' });
+  }
+});
+
+app.post('/api/admin/payments', requireAdmin, async (req, res) => {
+  try {
+    const b = req.body || {};
+    if (!UUID.test(b.applicationId)) return res.status(400).json({ error: 'Invalid student.' });
+    if (!Number.isInteger(b.amount) || b.amount < 1 || b.amount > 100000)
+      return res.status(400).json({ error: 'Enter the amount as a whole number of rand (1 to 100 000).' });
+    if (!isMonth(b.month)) return res.status(400).json({ error: 'Choose which month this payment is for.' });
+    if (!isDate(b.paidOn)) return res.status(400).json({ error: 'Enter the date it was paid.' });
+    const id = await store.addPayment({
+      applicationId: b.applicationId, month: b.month, amount: b.amount, paidOn: b.paidOn,
+      note: typeof b.note === 'string' ? b.note.trim().slice(0, 200) : '',
+    });
+    if (!id) return res.status(404).json({ error: 'Student not found.' });
+    res.json({ ok: true, id });
+  } catch (e) {
+    console.error('payment failed:', e.message);
+    res.status(500).json({ error: 'Could not save the payment.' });
+  }
+});
+
+app.delete('/api/admin/payments/:id', requireAdmin, async (req, res) => {
+  try {
+    if (!UUID.test(req.params.id)) return res.status(404).json({ error: 'Not found.' });
+    const ok = await store.removePayment(req.params.id);
+    res.status(ok ? 200 : 404).json(ok ? { ok: true } : { error: 'Not found.' });
+  } catch (e) {
+    console.error('payment delete failed:', e.message);
+    res.status(500).json({ error: 'Could not delete.' });
   }
 });
 
