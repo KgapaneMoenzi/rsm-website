@@ -342,6 +342,7 @@ function card(a) {
     h('dl', {},
       h('div', {}, h('dt', {}, 'Student number'), h('dd', {}, a.studentNumber)),
       h('div', {}, h('dt', {}, 'University'), h('dd', {}, a.university)),
+      h('div', {}, h('dt', {}, 'Funding'), h('dd', {}, a.funding || 'Not given')),
       h('div', {}, h('dt', {}, 'Phone'), h('dd', {}, h('a', { href: 'tel:' + a.phone }, a.phone))),
       h('div', {}, h('dt', {}, 'Email'), h('dd', {}, a.email ? h('a', { href: 'mailto:' + a.email }, a.email) : 'Not given')),
       h('div', {}, h('dt', {}, 'Applied'), h('dd', {}, fmt(a.createdAt)))),

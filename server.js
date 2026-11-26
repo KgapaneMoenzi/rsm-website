@@ -41,6 +41,7 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const ROOMS = ['Bachelor Room', 'Single Room', 'Sharing Room'];
 const UNIVERSITIES = ['University of Mpumalanga (UMP)', 'Other University'];
+const FUNDING = ['NSFAS', 'Bursary', 'Self-funded'];
 const STATUSES = ['new', 'contacted', 'accepted', 'declined'];
 
 function sniffImage(buf) {
@@ -189,6 +190,7 @@ app.post('/api/apply', applyFloodLimiter, applyLimiter, receiveId, async (req, r
     const studentNumber = clean(b.studentNum);
     const university = clean(b.university);
     const room = clean(b.room);
+    const funding = clean(b.funding);
     const phone = normalisePhone(b.phone);
     const email = clean(b.email).toLowerCase();
 
@@ -200,6 +202,7 @@ app.post('/api/apply', applyFloodLimiter, applyLimiter, receiveId, async (req, r
     if (email.length > 120 || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email))
       return fail(res, 'Please enter a valid email address so we can confirm your application.');
     if (!ROOMS.includes(room)) return fail(res, 'Please choose a room type.');
+    if (!FUNDING.includes(funding)) return fail(res, 'Please tell us how your accommodation will be paid for.');
     if (!['on', 'true', '1', 'yes'].includes(clean(b.consent).toLowerCase()))
       return fail(res, 'Please tick the box to agree that we may use your details and ID.');
 
@@ -208,13 +211,13 @@ app.post('/api/apply', applyFloodLimiter, applyLimiter, receiveId, async (req, r
     if (!img) return fail(res, 'That file is not a valid JPG or PNG photo.');
 
     const saved = await store.save(
-      { name, studentNumber, university, phone, email, room },
+      { name, studentNumber, university, phone, email, room, funding },
       { buffer: req.file.buffer, type: img.type, ext: img.ext }
     );
     // Reply to the student first; emails go out in the background and can never lose the application
     res.json({ ok: true, emailed: mailer.enabled });
     mailer
-      .notifyNewApplication({ name, studentNumber, university, phone, email, room, createdAt: saved.createdAt })
+      .notifyNewApplication({ name, studentNumber, university, phone, email, room, funding, createdAt: saved.createdAt })
       .catch((e) => console.error('email error:', e.message));
   } catch (e) {
     console.error('apply failed:', e.message);
