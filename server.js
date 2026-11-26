@@ -123,6 +123,7 @@ app.use(
         fontSrc: ['https://fonts.gstatic.com'],
         imgSrc: ["'self'", 'data:', 'blob:', 'https://images.unsplash.com'], // unsplash = hero banner photo
         connectSrc: ["'self'"],
+        mediaSrc: ["'self'"],
         objectSrc: ["'none'"],
         baseUri: ["'self'"],
         formAction: ["'self'"],
@@ -221,6 +222,26 @@ app.post('/api/apply', applyFloodLimiter, applyLimiter, receiveId, async (req, r
   }
 });
 const fail = (res, error) => res.status(400).json({ error });
+
+/* ------------------------------ public availability ------------------------------ */
+// Public on purpose, but it only ever reveals "places left" for room types whose total the landlord has set.
+const availLimiter = rateLimit({ windowMs: 60 * 1000, limit: 60, standardHeaders: true, legacyHeaders: false });
+
+app.get('/api/availability', availLimiter, async (req, res) => {
+  try {
+    const [cap, taken] = await Promise.all([store.getCapacity(), store.acceptedCounts()]);
+    const rooms = {};
+    for (const room of ROOMS) {
+      const total = cap[room] || 0;
+      if (total > 0) rooms[room] = { left: Math.max(0, total - (taken[room] || 0)) };
+    }
+    res.set('Cache-Control', 'public, max-age=30');
+    res.json({ rooms });
+  } catch (e) {
+    console.error('availability failed:', e.message);
+    res.json({ rooms: {} }); // never break the public page over this
+  }
+});
 
 /* ----------------------------------- admin ----------------------------------- */
 const loginLimiter = rateLimit({

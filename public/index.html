@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>RSM Student Accommodation | Premium UMP Living</title>
-<meta name="description" content="Premium Bachelor, Single and Sharing rooms in Thekwane North with daily transport to the University of Mpumalanga.">
+<meta name="description" content="Bachelor, Single and Sharing rooms in Thekwane North from R3 800 per month, with daily transport to the University of Mpumalanga. NSFAS, bursary and self-funded students welcome.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -270,6 +270,43 @@ html{-webkit-text-size-adjust:100%}
 .form-err{color:#fda4a4;font-size:.92rem;margin:-6px 0 14px;min-height:0}
 .form-err:empty{display:none}
 .submit[disabled]{opacity:.7;cursor:wait}
+
+.avail{display:inline-flex;align-items:center;gap:8px;align-self:flex-start;margin:-10px 0 16px;padding:5px 13px;border-radius:50px;font-size:.8rem;font-weight:700}
+.avail[hidden]{display:none}
+.avail::before{content:'';width:8px;height:8px;border-radius:50%;background:currentColor;flex:none}
+.avail.ok{background:#e3f6ec;color:#117a4d}
+.avail.low{background:#fff4dc;color:#a8650a}
+.avail.low::before{animation:pulse 2s infinite}
+.avail.out{background:#eef0f4;color:#5b6880}
+.room.sold .room-img,.room.sold h3{opacity:.75}
+.form-note{color:#f5c26b;font-size:.85rem;margin-top:8px}
+
+.price{display:flex;align-items:baseline;gap:8px;margin:0 0 18px}
+.price b{font:800 1.9rem 'Outfit',sans-serif;color:var(--navy);letter-spacing:-.5px}
+.price span{font-size:.88rem;color:var(--muted);font-weight:500}
+.funding-sec{background:#fff;padding:90px 0}
+.fund-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px}
+.fund{border:1px solid var(--line);border-radius:18px;padding:26px 24px;background:var(--bg);position:relative;padding-left:58px}
+.fund::before{content:'';position:absolute;left:22px;top:30px;width:22px;height:22px;border-radius:50%;background:rgba(245,166,35,.2) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d98a0b' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12l5 5L20 7'/%3E%3C/svg%3E") center/13px no-repeat}
+.fund h3{font-size:1.1rem;margin-bottom:6px}
+.fund p{color:var(--muted);font-size:.95rem}
+@media(max-width:768px){.funding-sec{padding:64px 0}}
+
+.video-sec{background:var(--navy);color:#fff;padding:90px 0;position:relative;overflow:hidden}
+.video-sec::before{content:'';position:absolute;width:420px;height:420px;border-radius:50%;background:var(--gold);filter:blur(170px);opacity:.14;right:-120px;top:-100px}
+.video-grid{display:grid;grid-template-columns:minmax(0,340px) 1fr;gap:64px;align-items:center;justify-content:center;position:relative}
+.video-wrap{border-radius:24px;overflow:hidden;background:#000;box-shadow:0 30px 70px rgba(0,0,0,.5);aspect-ratio:9/16;max-height:78vh;width:100%}
+.video-wrap video{width:100%;height:100%;display:block;object-fit:contain;background:#000}
+.video-text h2{color:#fff;font-size:clamp(2rem,4vw,3rem);margin-bottom:14px;letter-spacing:-.5px}
+.video-text>p{color:#aab6cc;font-size:1.1rem;max-width:440px;margin-bottom:26px}
+.video-text .credit{font-size:.82rem;color:#7f8ca6;margin:22px 0 0}
+.video-text .credit a{color:#c5cee0;text-decoration:underline}
+@media(max-width:768px){
+  .video-sec{padding:64px 0}
+  .video-grid{grid-template-columns:1fr;gap:28px;justify-items:center;text-align:center}
+  .video-wrap{max-width:320px}
+  .video-text>p{margin-left:auto;margin-right:auto}
+}
 </style>
 </head>
 <body>
@@ -358,6 +395,26 @@ html{-webkit-text-size-adjust:100%}
 </section>
 <div class="lb" id="lb" hidden><button class="lb-x" id="lbx" aria-label="Close">&times;</button><img id="lbImg" alt=""></div>
 
+<section class="video-sec" id="video">
+  <div class="container">
+    <div class="video-grid">
+      <div class="video-wrap reveal">
+        <video id="tour" controls playsinline preload="none" poster="media/walkthrough-poster.jpg" aria-label="Video tour of a single room">
+          <source src="media/walkthrough.mp4" type="video/mp4">
+          Your browser cannot play this video.
+        </video>
+      </div>
+      <div class="video-text reveal d1">
+        <span class="eyebrow">Watch</span>
+        <h2>A Quick Look Inside</h2>
+        <p>See what a single room looks like before you apply. It takes about 20 seconds.</p>
+        <a href="#apply" class="btn btn-gold">Apply Now</a>
+        <p class="credit">Video by <a href="https://www.tiktok.com/@mycampusconnect" target="_blank" rel="noopener">@mycampusconnect</a> on TikTok</p>
+      </div>
+    </div>
+  </div>
+</section>
+
 <section class="rooms" id="rooms">
   <div class="container">
     <div class="section-header reveal">
@@ -369,6 +426,8 @@ html{-webkit-text-size-adjust:100%}
       <div class="room reveal">
         <div class="room-body">
           <h3>Bachelor Room</h3><div class="room-type">En-Suite · Fully Private</div>
+          <div class="avail" data-avail="Bachelor Room" hidden></div>
+          <div class="price"><b>R4&nbsp;500</b><span>per month</span></div>
           <ul>
             <li>Private Room &amp; Bathroom</li>
             <li>Access to 9 Daily UMP Trips</li>
@@ -382,6 +441,8 @@ html{-webkit-text-size-adjust:100%}
         <div class="tag">Most Popular</div>
         <div class="room-body">
           <h3>Single Room</h3><div class="room-type">Private Bedroom</div>
+          <div class="avail" data-avail="Single Room" hidden></div>
+          <div class="price"><b>R4&nbsp;500</b><span>per month</span></div>
           <ul>
             <li>Private Bedroom</li>
             <li>Share Shower &amp; Kitchen with 1 Person</li>
@@ -394,6 +455,8 @@ html{-webkit-text-size-adjust:100%}
       <div class="room reveal d2">
         <div class="room-body">
           <h3>Sharing</h3><div class="room-type">2 Students</div>
+          <div class="avail" data-avail="Sharing Room" hidden></div>
+          <div class="price"><b>R3&nbsp;800</b><span>per month</span></div>
           <ul>
             <li>Shared Bedroom (2 Pax)</li>
             <li>Share Shower &amp; Kitchen with 1 Person</li>
@@ -403,6 +466,21 @@ html{-webkit-text-size-adjust:100%}
           <a href="#apply" class="btn btn-navy" data-room="Sharing Room">Apply for Sharing</a>
         </div>
       </div>
+    </div>
+  </div>
+</section>
+
+<section class="funding-sec" id="funding">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="eyebrow">Funding</span>
+      <h2>However You Are Funded, You Are Welcome</h2>
+      <p>We accommodate NSFAS beneficiaries, students on bursaries, and self-funded students.</p>
+    </div>
+    <div class="fund-grid reveal">
+      <div class="fund"><h3>NSFAS beneficiaries</h3><p>Funded by NSFAS? You are welcome to apply.</p></div>
+      <div class="fund"><h3>Bursary students</h3><p>Studying on a bursary? You are welcome to apply.</p></div>
+      <div class="fund"><h3>Self-funded students</h3><p>Paying for your own studies? You are welcome too.</p></div>
     </div>
   </div>
 </section>
@@ -429,6 +507,8 @@ html{-webkit-text-size-adjust:100%}
       <h2>Good to Know</h2>
     </div>
     <div class="faq reveal">
+      <details><summary>How much does a room cost?</summary><p>Single and Bachelor rooms are R4 500 per month. Sharing rooms (2 students) are R3 800 per month. Transport to UMP, Wi-Fi and the kitchen are included.</p></details>
+      <details><summary>Do you accept NSFAS and bursary students?</summary><p>Yes. We accommodate NSFAS beneficiaries, students on bursaries, and self-funded students.</p></details>
       <details><summary>How does transport to campus work?</summary><p>Residents have access to 9 daily trips to the University of Mpumalanga: 4 in the morning to campus and 5 return trips in the afternoon/evening.</p></details>
       <details><summary>What is included in every kitchen?</summary><p>Each kitchen has a 4-plate stove, a refrigerator and a microwave, ready for use.</p></details>
       <details><summary>Who will I share a bathroom and kitchen with?</summary><p>In Single and Sharing rooms, the shower and kitchen are shared with only one other person. Bachelor rooms are fully private and en-suite.</p></details>
@@ -455,7 +535,8 @@ html{-webkit-text-size-adjust:100%}
           </div>
           <div class="fg"><label for="email">Email Address</label><input type="email" id="email" name="email" required placeholder="you@example.com" autocomplete="email" inputmode="email"></div>
           <div class="fg"><label for="room">Room Type</label>
-            <select id="room" name="room"><option>Bachelor Room</option><option selected>Single Room</option><option>Sharing Room</option></select></div>
+            <select id="room" name="room"><option value="Bachelor Room">Bachelor Room</option><option value="Single Room" selected>Single Room</option><option value="Sharing Room">Sharing Room</option></select>
+            <p class="form-note" id="roomNote" hidden>This room type is full right now. You can still apply to join the waiting list, and we will contact you if a place opens.</p></div>
           <div class="fg"><label>Upload ID Picture</label>
             <div class="upload" id="dropzone">
               <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -523,9 +604,34 @@ const co=new IntersectionObserver(es=>es.forEach(e=>{
 }),{threshold:.6});
 document.querySelectorAll('.count').forEach(el=>co.observe(el));
 
+// Live availability from the server: shows places left, and switches full rooms to a waiting list
+(function(){
+  const sel=document.getElementById('room'),note=document.getElementById('roomNote');
+  const full={};
+  function syncNote(){note.hidden=!full[sel.value]}
+  sel.addEventListener('change',syncNote);
+  fetch('/api/availability').then(r=>r.json()).then(d=>{
+    Object.entries(d.rooms||{}).forEach(([room,v])=>{
+      const left=v.left,badge=document.querySelector('[data-avail="'+room+'"]'),btn=document.querySelector('[data-room="'+room+'"]'),opt=[...sel.options].find(o=>o.value===room);
+      if(!badge)return;
+      full[room]=left<=0;
+      badge.className='avail '+(left<=0?'out':left<=3?'low':'ok');
+      badge.textContent=left<=0?'Fully booked':left<=3?'Only '+left+' left':left+' places available';
+      badge.hidden=false;
+      if(left<=0){
+        badge.closest('.room').classList.add('sold');
+        if(btn)btn.textContent='Join the waiting list';
+        if(opt)opt.textContent=room+' (waiting list)';
+      }
+    });
+    syncNote();
+  }).catch(()=>{});
+})();
+
 // Preselect room from "Apply for ..." buttons
 document.querySelectorAll('[data-room]').forEach(b=>b.addEventListener('click',()=>{
   document.getElementById('room').value=b.dataset.room;
+  document.getElementById('room').dispatchEvent(new Event('change'));
 }));
 
 // ID upload preview + drag state
