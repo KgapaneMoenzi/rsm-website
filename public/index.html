@@ -52,11 +52,11 @@ nav.scrolled{padding:12px 0}
 .hero{min-height:100vh;position:relative;display:flex;align-items:center;color:#fff;overflow:hidden;background:var(--navy)}
 .hero::after{content:'';position:absolute;width:520px;height:520px;border-radius:50%;background:var(--gold);filter:blur(180px);opacity:.18;right:-140px;bottom:-120px}
 .hero .container{position:relative;z-index:2;padding-top:110px;padding-bottom:140px}
-.hero-content{max-width:760px;animation:fadeUp 1s ease both}
+.hero-content .gold-text{text-shadow:none;filter:drop-shadow(0 2px 10px rgba(0,0,0,.5))}.hero-content{text-shadow:0 2px 18px rgba(0,0,0,.55);max-width:760px;animation:fadeUp 1s ease both}
 .hero-slides{position:absolute;inset:0;z-index:0}
-.hero-slides::after{content:'';position:absolute;inset:0;background:linear-gradient(100deg,rgba(11,18,32,.94) 0%,rgba(11,18,32,.78) 45%,rgba(11,18,32,.45) 100%),linear-gradient(0deg,rgba(11,18,32,.85) 0%,transparent 35%)}
+.hero-slides::after{content:'';position:absolute;inset:0;background:linear-gradient(100deg,rgba(11,18,32,.82) 0%,rgba(11,18,32,.5) 42%,rgba(11,18,32,.08) 100%)}
 .hero-slides img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transform:scale(1.04);transition:opacity 1.6s ease,transform 7s ease-out}
-.hero-slides img.on{opacity:1;transform:scale(1.12)}
+.hero-slides img.on{opacity:1;transform:scale(1.1)}
 .hero-cap{position:absolute;z-index:3;right:max(20px,calc((100vw - 1100px)/2));bottom:112px;display:flex;align-items:center;gap:14px;font-size:.82rem;color:#e4e9f3}
 .hero-cap b{font-weight:600;background:rgba(11,18,32,.7);padding:6px 14px;border-radius:50px}
 .hero-dots{display:flex;gap:7px}
@@ -356,8 +356,7 @@ html{-webkit-text-size-adjust:100%}
     </div>
   </div>
   <div class="hero-cap"><b id="heroCap">University of Mpumalanga main entrance</b><div class="hero-dots" id="heroDots"></div></div>
-  <div class="scroll-hint"></div>
-</header>
+  </header>
 
 <div class="stats-wrap">
   <div class="container">
@@ -431,14 +430,6 @@ html{-webkit-text-size-adjust:100%}
             <source src="media/walkthrough.mp4" type="video/mp4">
           </video>
         </div>
-      </figure>
-      <figure class="vid reveal d1">
-        <div class="video-wrap">
-          <video controls playsinline preload="none" poster="media/walkthrough-2-poster.jpg" aria-label="Video of single rooms for UMP students">
-            <source src="media/walkthrough-2.mp4" type="video/mp4">
-          </video>
-        </div>
-        <figcaption class="credit">Video by <a href="https://www.tiktok.com/@mycampusconnect" target="_blank" rel="noopener">@mycampusconnect</a> on TikTok</figcaption>
       </figure>
     </div>
     <div class="video-cta reveal"><a href="#apply" class="btn btn-gold">Apply Now</a></div>
